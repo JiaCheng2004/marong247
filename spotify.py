@@ -1,14 +1,17 @@
 import discord
 from discord.ext import commands
 from discord import FFmpegOpusAudio
+from dotenv import load_dotenv, find_dotenv
 from time import *
 import os
 import youtube_dl
 import requests
+import asyncio
 
 spotify = commands.Bot(command_prefix="spotify.", intents=discord.Intents.all())
 
-MARONG_SPOTIFY_TOKEN = 'TOKEN'
+load_dotenv(find_dotenv())
+MARONG_SPOTIFY_TOKEN = os.getenv('MARONG_SPOTIFY_TOKEN')
 
 @spotify.event
 async def on_ready():
@@ -45,6 +48,10 @@ async def marong(ctx,*,item):
                 video = ydl.extract_info(item, download=False)
         audio = await FFmpegOpusAudio.from_probe(video['formats'][0]['url'],**FFMPEG_OPTIONS)
         ctx.voice_client.play(source = audio)
+        while ctx.voice_client.is_playing():
+            await asyncio.sleep(5)
+            pass
+        await marong(ctx,item=item)
     except discord.ConnectionClosed:
         await marong(ctx,item=item)
     
